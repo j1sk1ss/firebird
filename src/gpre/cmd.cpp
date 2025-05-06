@@ -1602,11 +1602,10 @@ static void create_shadow( gpre_req* request, act* action)
 //
 //		Generate dynamic DDL for CREATE TABLE action.
 //
-
+// [PRACTICE_MEMLEAK] Here generated DDL (data definition lang) for request
 static void create_table( gpre_req* request, const act* action)
 {
 	// add relation name
-
 	const gpre_rel* relation = (gpre_rel*) action->act_object;
 	put_symbol(request, isc_dyn_def_rel, relation->rel_symbol);
 
@@ -1635,9 +1634,24 @@ static void create_table( gpre_req* request, const act* action)
 		if (field->fld_default_value)
 		{
 			put_blr(request, isc_dyn_fld_default_value, field->fld_default_value, CME_expr);
+			/*
+			[PRACTICE_MEMLEAK 06.05]
+			Here we allocate string buffer, but we don't free it.
+			In CPR_get_text we read data from FD (field->fld_default_source) to (default_source).
+			*/
 			TEXT* default_source = (TEXT*) MSC_alloc(field->fld_default_source->txt_length + 1);
 			CPR_get_text(default_source, field->fld_default_source);
+
+			/*
+			[PRACTICE_MEMLEAK 06.05]
+			In put_cstring we only copy default_source to request bytes field. (Copy content instead pointer).
+			*/
 			put_cstring(request, isc_dyn_fld_default_source, default_source);
+
+			/*
+			[PRACTICE_MEMLEAK 06.05]
+			MSC_free also not implemented. That`s why, i guess, that`s not a memleak.
+			*/
 		}
 
 		request->add_end();

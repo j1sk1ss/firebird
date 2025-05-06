@@ -14,7 +14,8 @@
 
 	"files.insertFinalNewline": true,
 	"files.associations": {
-		"*.epp": "cpp"
+		"*.epp": "cpp",
+		"memory_resource": "cpp"
 	},
 	"search.exclude": {
 		"temp/**": true,

@@ -664,7 +664,7 @@ void condInitCritSect(struct AutoInitCriticalSection* gcs);
 /* Debuggers */
 
 /* define this if you use Valgrind, note: it CHANGES the way SOBER-128 and RC4 work (see the code) */
-/* #define LTC_VALGRIND */
+#define LTC_VALGRIND
 
 #endif
 
