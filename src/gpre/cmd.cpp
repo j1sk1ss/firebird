@@ -1602,7 +1602,8 @@ static void create_shadow( gpre_req* request, act* action)
 //
 //		Generate dynamic DDL for CREATE TABLE action.
 //
-// [PRACTICE_MEMLEAK] Here generated DDL (data definition lang) for request
+// [PRACTICE_MEMLEAK 06.05] Here generated DDL (data definition lang) for request
+// [PRACTICE_MEMLEAK 06.05] Not freed MSC_alloc version
 static void create_table( gpre_req* request, const act* action)
 {
 	// add relation name
