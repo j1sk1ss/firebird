@@ -81,20 +81,20 @@ char *nullable;
 
 void done(int k)
 {
-	if (action_file) 
-	{ 
-		fclose(action_file); 
-		unlink(action_file_name); 
+	if (action_file)
+	{
+		fclose(action_file);
+		unlink(action_file_name);
 	}
-	if (text_file) 
-	{ 
-		fclose(text_file); 
-		unlink(text_file_name); 
+	if (text_file)
+	{
+		fclose(text_file);
+		unlink(text_file_name);
 	}
-	if (union_file) 
-	{ 
-		fclose(union_file); 
-		unlink(union_file_name); 
+	if (union_file)
+	{
+		fclose(union_file);
+		unlink(union_file_name);
 	}
 	exit(k);
 }
@@ -133,22 +133,22 @@ void usage()
 
 void no_more_options(int i, int argc, char* argv[])
 {
-	if (i + 1 != argc) 
+	if (i + 1 != argc)
 		usage();
 
 	input_file_name = argv[i];
 
-	if (!file_prefix) 
+	if (!file_prefix)
 	{
-		if (input_file_name) 
+		if (input_file_name)
 		{
 			char* s;
 			file_prefix = strdup(input_file_name);
 			if ((s = strrchr(file_prefix, '.')))
-				*s = 0; 
-		} 
+				*s = 0;
+		}
 		else {
-			file_prefix = "y"; 
+			file_prefix = "y";
 		}
 	}
 }
@@ -159,20 +159,20 @@ void getargs(int argc, char **argv)
 	register int i;
 	register char *s;
 
-	if (argc > 0) 
+	if (argc > 0)
 		myname = argv[0];
 
 	for (i = 1; i < argc; ++i)
 	{
 		s = argv[i];
-		if (*s != '-') 
+		if (*s != '-')
 			break;
 
 		switch (*++s)
 		{
 		case '\0':
 			input_file = stdin;
-			if (i + 1 < argc) 
+			if (i + 1 < argc)
 				usage();
 			return;
 
@@ -200,7 +200,7 @@ void getargs(int argc, char **argv)
 				char **ps;
 				char *var_name = s + 1;
 				extern char *defd_vars[];
-				for (ps = &defd_vars[0]; *ps; ps++) 
+				for (ps = &defd_vars[0]; *ps; ps++)
 				{
 					if (strcmp(*ps, var_name) == 0) {
 						error(lineno, 0, 0, "Preprocessor variable %s already defined", var_name);
@@ -211,7 +211,7 @@ void getargs(int argc, char **argv)
 				*++ps = NULL;
 			}
 			continue;
-			  
+
 		case 'E':
 			Eflag = 1;
 			break;
@@ -288,10 +288,10 @@ char *allocate(unsigned n)
     register char *p = NULL;
     if (n)
     {
-        /* VM: add a few bytes here, cause 
+        /* VM: add a few bytes here, cause
          * Linux calloc does not like sizes like 32768 */
 		p = CALLOC(1, n + 10);
-		if (!p) 
+		if (!p)
 			no_space();
     }
     return (p);
@@ -303,7 +303,7 @@ void create_file_names()
 	int i, len;
 
 	char* tmpdir = getenv("TMPDIR");
-	if (tmpdir == 0) 
+	if (tmpdir == 0)
 		tmpdir = DEFAULT_TMPDIR;
 
 	len = strlen(tmpdir);
@@ -311,14 +311,19 @@ void create_file_names()
 	if (len && tmpdir[len-1] != DIR_CHAR)
 		++i;
 
+	/*
+	[PRACTICE_MEMLEAK 07.05]
+	We allocate memory, but forget free it.
+	Anyway this code stay unreachable.
+	*/
 	action_file_name = MALLOC(i);
-	if (action_file_name == 0) 
+	if (action_file_name == 0)
 		no_space();
 	text_file_name = MALLOC(i);
-	if (text_file_name == 0) 
+	if (text_file_name == 0)
 		no_space();
 	union_file_name = MALLOC(i);
-	if (union_file_name == 0) 
+	if (union_file_name == 0)
 		no_space();
 
 	strcpy(action_file_name, tmpdir);

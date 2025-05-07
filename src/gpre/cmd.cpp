@@ -1,3 +1,9 @@
+/*
+[PRACTICE_MEMLEAK 07.05]
+Database creation and deleting don`t cause memleak.
+But create_domain and create_table create leaks (See domen_leak_test.py and table_leak_test.py).
+*/
+
 //____________________________________________________________
 //
 //		PROGRAM:	C preprocessor
@@ -1653,6 +1659,7 @@ static void create_table( gpre_req* request, const act* action)
 			[PRACTICE_MEMLEAK 06.05]
 			MSC_free also not implemented. That`s why, i guess, that`s not a memleak.
 			*/
+			MSC_free(default_source);
 		}
 
 		request->add_end();

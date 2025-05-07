@@ -33,6 +33,7 @@ test_user_pass: str = args.upass
 Find firebird process. If it launch under valgrind, will raise warning.
 """
 
+main_proc = None
 for proc in psutil.process_iter():
     if proc.name() == PROC_NAME:
         main_proc = psutil.Process(proc.pid)
@@ -101,7 +102,7 @@ try:
             print(f'Difference:  {diff} kB')
             print('-' * 25)
         else:
-            print(f'CREATE & DROP cycle [{i}]')
+            print(f'Table CREATE & DROP cycle [{i}]')
 except KeyboardInterrupt as _:
     _close_conn()
 

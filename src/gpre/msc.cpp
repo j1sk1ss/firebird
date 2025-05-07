@@ -86,10 +86,21 @@ act* MSC_action( gpre_req* request, act_t type)
 //
 //
 
+/*
+[PRACTICE_MEMLEAK 07.05]
+Debug shows, that MSC_alloc used in CREATE & DROP table test where memleak happens.
+*/
 UCHAR* MSC_alloc(int size)
 {
-	size = FB_ALIGN(size, FB_ALIGNMENT);
+	/*
+	[PRACTICE_MEMLEAK 07.05]
+		FILE* log = fopen("/tmp/msc_alloc.log", "a");
+		if (space) fprintf(log, "size=%i space->spc_remaining=%i addr=%i\n", size, space->spc_remaining, space);
+		else fprintf(log, "No space! --> Block allocation!\n");
+		fclose(log);
+	*/
 
+	size = FB_ALIGN(size, FB_ALIGNMENT);
 	if (!space || size > space->spc_remaining)
 	{
 		const int n = MAX(size, 4096);
@@ -234,7 +245,7 @@ gpre_sym* MSC_find_symbol(gpre_sym* symbol, sym_t type)
 //		Free a block.
 //
 
-void MSC_free(void*)
+void MSC_free(void* ptr)
 {
 	/*
 	[PRACTICE_MEMLEAK 06.05]
