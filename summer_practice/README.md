@@ -1,20 +1,10 @@
 # MSC_alloc & MSC_free version
 ------------------------------
-В проекте имеется модуль msc.cpp, включающий в себя MSC_alloc, который в свою очередь вызывается в функции create_table (src/gpre/cmd.cpp)
-```
-...
 
-if (field->fld_default_value)
-{
-    put_blr(request, isc_dyn_fld_default_value, field->fld_default_value, CME_expr);
-    TEXT* default_source = (TEXT*) MSC_alloc(field->fld_default_source->txt_length + 1);    
-	CPR_get_text(default_source, field->fld_default_source);
-    put_cstring(request, isc_dyn_fld_default_source, default_source); 
-}
-
-...
-
-```
+Функции которые вызывают MSC_alloc и вызываются во время тестового кейса (иными словами создают мемлик):
+CMP_t_start
+act_set_transaction
+CMP_compile_request
 
 Сама функция MSC_alloc вызывается во время работы тестового кейса из https://github.com/FirebirdSQL/firebird/issues/7318, и как видно из логов (я сократил файлы), вызов изменяет адресс базового блока (файл msc_short.log).
 

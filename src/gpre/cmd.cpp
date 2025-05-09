@@ -1610,6 +1610,12 @@ static void create_shadow( gpre_req* request, act* action)
 //
 // [PRACTICE_MEMLEAK 06.05] Here generated DDL (data definition lang) for request
 // [PRACTICE_MEMLEAK 06.05] Not freed MSC_alloc version
+
+/*
+[PRACTICE_MEMLEAK 07.06]
+Update: This function not used, but MSC_alloc used. Somewhere.
+*/
+
 static void create_table( gpre_req* request, const act* action)
 {
 	// add relation name
@@ -1659,7 +1665,6 @@ static void create_table( gpre_req* request, const act* action)
 			[PRACTICE_MEMLEAK 06.05]
 			MSC_free also not implemented. That`s why, i guess, that`s not a memleak.
 			*/
-			MSC_free(default_source);
 		}
 
 		request->add_end();

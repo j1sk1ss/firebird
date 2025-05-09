@@ -15,7 +15,26 @@
 	"files.insertFinalNewline": true,
 	"files.associations": {
 		"*.epp": "cpp",
-		"memory_resource": "cpp"
+		"memory_resource": "cpp",
+		"ostream": "cpp",
+		"chrono": "cpp",
+		"complex": "cpp",
+		"random": "cpp",
+		"functional": "cpp",
+		"regex": "cpp",
+		"tuple": "cpp",
+		"type_traits": "cpp",
+		"istream": "cpp",
+		"variant": "cpp",
+		"bitset": "cpp",
+		"algorithm": "cpp",
+		"format": "cpp",
+		"charconv": "cpp",
+		"optional": "cpp",
+		"ratio": "cpp",
+		"system_error": "cpp",
+		"array": "cpp",
+		"utility": "cpp"
 	},
 	"search.exclude": {
 		"temp/**": true,

@@ -2415,6 +2415,7 @@ static SLONG pass1(const TEXT* base_directory)
 		CPR_error("No database specified");
 	}
 
+	// MSC_free_all();
 	return 0;
 }
 

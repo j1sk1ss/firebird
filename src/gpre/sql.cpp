@@ -4374,6 +4374,10 @@ static act* act_set_statistics()
 //		Generate a set transaction
 //
 
+/*
+[PRACTICE_MEMLEAK 07.05]
+Same as cmp.cpp CMP_t_start function.
+*/
 static act* act_set_transaction()
 {
 	gpre_tra* trans = (gpre_tra*) MSC_alloc(TRA_LEN);

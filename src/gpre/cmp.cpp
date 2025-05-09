@@ -121,6 +121,10 @@ void CMP_check( gpre_req* request, SSHORT min_reqd)
 //		numbers, and internal idents.  Compute length of request.
 //
 
+/*
+[PRACTICE_MEMLEAK 09.05]
+1.1KB per call
+*/
 void CMP_compile_request( gpre_req* request)
 {
 	// if there isn't a request handle specified, make one!
@@ -381,6 +385,15 @@ void CMP_stuff_symbol( gpre_req* request, const gpre_sym* symbol)
 //		TPB for each database referenced.
 //
 
+/*
+[PRACTICE_MEMLEAK 07.05]
+Potenrionaly memleak can be here. (Reason is size of allocation, that equals 40 + something).
+Logs says, that main allocation size if 48 before align.
+Update: Yes, this function used in test case.
+
+[PRACTICE_MEMLEAK 09.05]
+> 40bytes per call
+*/
 void CMP_t_start( gpre_tra* trans)
 {
 	char rrl_buffer[MAX_TPB];

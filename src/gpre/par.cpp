@@ -127,6 +127,10 @@ static gpre_fld*	flag_field;
 //		parse an action segment.  If not, return NULL.
 //
 
+/*
+[PRACTICE_MEMLEAK 09.05]
+This function used in memleak testcase
+*/
 act* PAR_action(const TEXT* base_dir)
 {
 	gpre_sym* symbol = gpreGlob.token_global.tok_symbol;

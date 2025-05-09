@@ -231,6 +231,11 @@ public:
 
 		if (treeAccessor.locate(key))
 		{
+			/*
+			[PRACTICE_MEMLEAK 09.05]
+			Possible memleak. We don`t free second field before re-assign to value.
+			Update: Valgrind results, that this is a cache leak. Pointers still point to whole memory.
+			*/
 			treeAccessor.current()->second = value;
 			return true;
 		}
