@@ -3660,11 +3660,23 @@ static bool create_relation(thread_db* tdbb, SSHORT phase, DeferredWork* work, j
 
 				// Roman Simakov: We need to return deleted relations to skip them.
 				// This maybe result of cleanup failure after phase 3.
-				while ( (relation = MET_lookup_relation_id(tdbb, rel_id++, true)) )
+/*
+[PRACTICE_MEMLEAK 10.05]
+(relation = MET_lookup_relation_id(tdbb, rel_id, false)) fixing error below.
+*/
+				while ( (relation = MET_lookup_relation_id(tdbb, rel_id, false)) )
 				{
+					rel_id++;
 					if (rel_id < local_min_relation_id || rel_id > MAX_RELATION_ID)
 						rel_id = local_min_relation_id;
 
+/*
+[PRACTICE_MEMLEAK 10.05]
+Error when cache became too large:
+raise exception_from_status(DatabaseError, self._isc_status,
+fdb.fbcore.DatabaseError: ('Error while commiting transaction:\n- SQLCODE: -607\n- unsuccessful metadata update\n-
+TABLE TEST\n- Implementation limit exceeded', -607, 335544351)
+*/
 					if (rel_id == X.RDB$RELATION_ID)
 					{
 						ERR_post(Arg::Gds(isc_no_meta_update) <<
@@ -3676,7 +3688,7 @@ static bool create_relation(thread_db* tdbb, SSHORT phase, DeferredWork* work, j
 				X.RDB$RELATION_ID = (rel_id > MAX_RELATION_ID) ? local_min_relation_id : rel_id;
 
 				MODIFY Y USING
-					Y.RDB$RELATION_ID = --rel_id;
+					Y.RDB$RELATION_ID = rel_id;
 					if (blob_id.isEmpty())
 						Y.RDB$DBKEY_LENGTH = 8;
 					else
@@ -5013,6 +5025,11 @@ static bool delete_relation(thread_db* tdbb, SSHORT phase, DeferredWork* work, j
 
 		// Release relation triggers
 		relation->releaseTriggers(tdbb, true);
+/*
+[PRACTICE_MEMLEAK 10.05]
+Maybe we should release relation?
+Update: No.
+*/
 
 		break;
 	}

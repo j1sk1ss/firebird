@@ -20,6 +20,81 @@ if (dbb->dbb_relations.get(name, temp) && !(temp->rel_flags & REL_dropped))
 }
 ```
 
+`create_relation` Функция, вызываемая для создания мета-информации об обьектах для быстрого доступа к ним. Основной
+проблемой было то, что удалённые обьекты, не очищались должным образом. Решением стало их очистка далее. Для проверки гипотезы
+был изменён исходный код так, что бы мы перезаписывали уже удалённые записи. </br>
+Итогом стало изменение "Утечки" с 4МБ до 400КБ.
+```
+		rel_id = 0;
+		request.reset(tdbb, irq_c_relation, IRQ_REQUESTS);
+
+		FOR(REQUEST_HANDLE request TRANSACTION_HANDLE transaction)
+			X IN RDB$DATABASE CROSS Y IN RDB$RELATIONS WITH
+				Y.RDB$RELATION_NAME EQ work->dfw_name.c_str()
+		{
+			blob_id = Y.RDB$VIEW_BLR;
+			external_flag = Y.RDB$EXTERNAL_FILE[0];
+
+			MODIFY X USING
+				rel_id = X.RDB$RELATION_ID;
+
+				if (rel_id < local_min_relation_id || rel_id > MAX_RELATION_ID)
+					rel_id = X.RDB$RELATION_ID = local_min_relation_id;
+
+				// Roman Simakov: We need to return deleted relations to skip them.
+				// This maybe result of cleanup failure after phase 3.
+
+				// [MEMLEAK] Was: while ( (relation = MET_lookup_relation_id(tdbb, rel_id++, true)) )
+				// That means, we return DELETED relations, instead rewriting them. That's why, if we reach
+				// 32000+ operations, we got error.
+				// Changing return_delete stmt to false fix this, but not full.
+				while ( (relation = MET_lookup_relation_id(tdbb, rel_id, false)) )
+				{
+					// [MEMLEAK] Changing way of rel_id increment
+					rel_id++;
+					if (rel_id < local_min_relation_id || rel_id > MAX_RELATION_ID)
+						rel_id = local_min_relation_id;
+
+					if (rel_id == X.RDB$RELATION_ID)
+					{
+						ERR_post(Arg::Gds(isc_no_meta_update) <<
+								 Arg::Gds(isc_table_name) << Arg::Str(work->dfw_name) <<
+								 Arg::Gds(isc_imp_exc));
+					}
+				}
+
+				X.RDB$RELATION_ID = (rel_id > MAX_RELATION_ID) ? local_min_relation_id : rel_id;
+
+				MODIFY Y USING
+				// [MEMLEAK] Was: Y.RDB$RELATION_ID = --rel_id;
+					Y.RDB$RELATION_ID = rel_id;
+					if (blob_id.isEmpty())
+						Y.RDB$DBKEY_LENGTH = 8;
+					else
+					{
+						// update the dbkey length to include each of the base relations
+						Y.RDB$DBKEY_LENGTH = 0;
+
+						handle.reset();
+
+						FOR(REQUEST_HANDLE handle)
+							Z IN RDB$VIEW_RELATIONS CROSS
+							R IN RDB$RELATIONS OVER RDB$RELATION_NAME
+							WITH Z.RDB$VIEW_NAME = work->dfw_name.c_str() AND
+								 (Z.RDB$CONTEXT_TYPE = VCT_TABLE OR
+								  Z.RDB$CONTEXT_TYPE = VCT_VIEW)
+						{
+							Y.RDB$DBKEY_LENGTH += R.RDB$DBKEY_LENGTH;
+						}
+						END_FOR
+					}
+				END_MODIFY
+			END_MODIFY
+		}
+		END_FOR
+```
+
+
 ## MSC_alloc & MSC_free version (Old)
 ------------------------------
 
