@@ -1349,6 +1349,10 @@ static SLONG compile_module( SLONG start_position, const TEXT* base_directory)
 	if (gpreGlob.errors_global)
 		return end_position;
 
+/*
+[PRACTICE_MEMLEAK 10.05]
+Compile gpreGlob requests.
+*/
 	for (gpre_req* request = gpreGlob.requests; request; request = request->req_next)
 	{
 		CMP_compile_request(request);

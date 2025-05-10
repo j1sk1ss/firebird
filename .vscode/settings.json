@@ -34,7 +34,12 @@
 		"ratio": "cpp",
 		"system_error": "cpp",
 		"array": "cpp",
-		"utility": "cpp"
+		"utility": "cpp",
+		"locale": "cpp",
+		"__functional_base": "cpp",
+		"future": "cpp",
+		"memory": "cpp",
+		"span": "cpp"
 	},
 	"search.exclude": {
 		"temp/**": true,

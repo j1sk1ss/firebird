@@ -1228,6 +1228,10 @@ dsql_rel* METD_get_relation(jrd_tra* transaction, DsqlCompilerScratch* dsqlScrat
 
 	// Start by seeing if symbol is already defined
 
+/*
+[PRACTICE_MEMLEAK 10.05]
+Possible cache leak. We check if cache already dropped, and if dropped, we don't make deal with this.
+*/
 	if (dbb->dbb_relations.get(name, temp) && !(temp->rel_flags & REL_dropped))
 	{
 		if (MET_dsql_cache_use(tdbb, SYM_relation, name))

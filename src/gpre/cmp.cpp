@@ -124,6 +124,8 @@ void CMP_check( gpre_req* request, SSHORT min_reqd)
 /*
 [PRACTICE_MEMLEAK 09.05]
 1.1KB per call
+[PRACTICE_MEMLEAK 10.05]
+We denerate DDL for CREATE / DROP command. Now request contans data.
 */
 void CMP_compile_request( gpre_req* request)
 {

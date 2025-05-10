@@ -8789,6 +8789,10 @@ void DropRelationNode::execute(thread_db* tdbb, DsqlCompilerScratch* dsqlScratch
 
 	savePoint.release();	// everything is ok
 
+/*
+[PRACTICE_MEMLEAK 10.05]
+Why .c_str()?
+*/
 	METD_drop_relation(transaction, name.c_str());
 	MET_dsql_cache_release(tdbb, SYM_relation, name);
 }
