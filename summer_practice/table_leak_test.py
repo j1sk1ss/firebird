@@ -84,13 +84,32 @@ def _close_conn() -> None:
     cur.close()
     conn.close()
 
+
+import time
+
+
 try:
     for i in range(test_count):
+        total_create_time = 0.0
+        total_commit_time = 0.0
+        total_drop_time = 0.0
+
         for j in range(1000):
+            start = time.perf_counter()
             cur.execute("create table test(id int)")
+            total_create_time = time.perf_counter() - start
+
+            start = time.perf_counter()
             conn.commit()
+            total_commit_time = time.perf_counter() - start
+
+            start = time.perf_counter()
             cur.execute("drop table test")
+            total_drop_time = time.perf_counter() - start
+
+            start = time.perf_counter()
             conn.commit()
+            total_commit_time += time.perf_counter() - start
 
         if server:
             print(f'After {((i + 1) * 1000)} queries:')
@@ -100,14 +119,24 @@ try:
 
             print(f'Used:        {result} kB')
             print(f'Difference:  {diff} kB')
+
             print('-' * 25)
         else:
             print(f'Table CREATE & DROP cycle [{i}]')
+
+        print(f'Average [CREATE] time: {total_create_time / 1000:.6f}s')
+        print(f'Average [DROP] time:   {total_drop_time / 1000:.6f}s')
+        print(f'Avarage [COMMIT] time: {(total_commit_time / 2) / 1000:.6f}s')
+        print('-' * 25)
+
 except KeyboardInterrupt as _:
+    pass
+finally:
     _close_conn()
 
-_close_conn()
-
 """
-Average diff (leak) is 3072KB => 3Kb per table CREATE & DROP
+Average diff (leak) is 3072KB => 3Kb per table CREATE & DROP (Found)
+Average diff (cache leak) is 400KB => 409B per table CREATE & DROP + DROP operation slows with time.
+That mean, this cache leak used during DROP operation, and when it goes larger, it slow down code.
+From 0.000001s per operation to 0.000007s (x7 after 100000 CREATE & DROP operations).
 """

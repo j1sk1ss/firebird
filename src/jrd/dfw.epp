@@ -1639,7 +1639,13 @@ void DFW_perform_work(thread_db* tdbb, jrd_tra* transaction)
 	}
 }
 
-
+/*
+[PRACTICE_MEMLEAK 11.05] Possible solution:
+Here we can delete all deleted MET data.
+I mean, mark all REL_deleted with NULL and free.
+But we should track any cache usage. I mean, we should
+make thread-safe data storage like obsolete map.
+*/
 void DFW_perform_post_commit_work(jrd_tra* transaction)
 {
 /**************************************
@@ -3660,12 +3666,60 @@ static bool create_relation(thread_db* tdbb, SSHORT phase, DeferredWork* work, j
 
 				// Roman Simakov: We need to return deleted relations to skip them.
 				// This maybe result of cleanup failure after phase 3.
+
 /*
 [PRACTICE_MEMLEAK 10.05]
 (relation = MET_lookup_relation_id(tdbb, rel_id, false)) fixing error below.
+
+[PRACTICE_MEMLEAK 11.05]
+We should return to true, because otherwise, we don't clear another relation-related cache like depends and other stuff.
+Insted rewriting, we should use delete_relation function.
 */
-				while ( (relation = MET_lookup_relation_id(tdbb, rel_id, false)) )
+
+				while ( (relation = MET_lookup_relation_id(tdbb, rel_id, true)) )
 				{
+
+					/*
+					[PRACTICE_MEMLEAK 11.05]
+					If relation is deleted, and it used in only one transaction, we can reuse this rel_id.
+					Also, before reuse, we should make sure, that we clean all associated resources.
+					*/
+					if (relation->rel_flags & REL_deleted && relation->rel_use_count <= 1) {
+						if (1) {
+							/*
+							We sure, that this relation not used in any other transaction.
+							*/
+							dbb->dbb_garbage_collector->removeRelation(relation->rel_id);
+							if (relation->isTemporary()) {
+								// release pages, allocated for current GTT instance
+								AutoSetRestoreFlag<ULONG> tmpSpace(&tdbb->tdbb_flags, TDBB_use_db_page_space, false);
+								relation->delPages(tdbb);
+							}
+
+							RelationPages* const relPages = relation->getBasePages();
+							if (relPages->rel_index_root) {
+								IDX_delete_indices(tdbb, relation, relPages);
+							}
+
+							if (relPages->rel_pages) {
+								DPM_delete_relation(tdbb, relation);
+							}
+
+							// if this is a view (or even if we don't know), delete dependency lists
+
+							if (relation->rel_view_rse || !(relation->rel_flags & REL_scanned)) {
+								MET_delete_dependencies(tdbb, work->dfw_name, obj_view, transaction);
+							}
+
+							break;
+						}
+					}
+
+					/*
+					Code above
+					[PRACTICE_MEMLEAK 11.05]
+					*/
+
 					rel_id++;
 					if (rel_id < local_min_relation_id || rel_id > MAX_RELATION_ID)
 						rel_id = local_min_relation_id;
@@ -3677,12 +3731,21 @@ raise exception_from_status(DatabaseError, self._isc_status,
 fdb.fbcore.DatabaseError: ('Error while commiting transaction:\n- SQLCODE: -607\n- unsuccessful metadata update\n-
 TABLE TEST\n- Implementation limit exceeded', -607, 335544351)
 */
+
 					if (rel_id == X.RDB$RELATION_ID)
 					{
 						ERR_post(Arg::Gds(isc_no_meta_update) <<
 								 Arg::Gds(isc_table_name) << Arg::Str(work->dfw_name) <<
 								 Arg::Gds(isc_imp_exc));
 					}
+
+					/*
+					[PRACTICE_MEMLEAK 11.05]
+					if (relation->rel_flags & REL_deleted) {
+						DFW_post_work(transaction, dfw_delete_relation, "(null)", rel_id);
+						delete_relation(tdbb, 0, NULL, transaction);
+					}
+					*/
 				}
 
 				X.RDB$RELATION_ID = (rel_id > MAX_RELATION_ID) ? local_min_relation_id : rel_id;

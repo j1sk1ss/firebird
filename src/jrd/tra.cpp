@@ -482,7 +482,11 @@ void TRA_commit(thread_db* tdbb, jrd_tra* transaction, const bool retaining_flag
 	REPL_trans_prepare(tdbb, transaction);
 
 	// Perform any meta data work deferred
-
+/*
+[PRACTICE_MEMLEAK 11.05] Possible solution:
+We create a bunch of task for MET cleanup
+DFW_post_work(transaction, dfw_delete_relation, &desc, id);
+*/
 	if (!(transaction->tra_flags & TRA_prepared))
 		DFW_perform_work(tdbb, transaction);
 
