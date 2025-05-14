@@ -94,22 +94,35 @@ try:
         total_commit_time = 0.0
         total_drop_time = 0.0
 
+        total_create_mem = 0.0
+        total_commit_mem = 0.0
+        total_drop_mem = 0.0
+
+        init_mem = prev_used
         for j in range(1000):
             start = time.perf_counter()
             cur.execute("create table test(id int)")
-            total_create_time = time.perf_counter() - start
-
-            start = time.perf_counter()
-            conn.commit()
-            total_commit_time = time.perf_counter() - start
-
-            start = time.perf_counter()
-            cur.execute("drop table test")
-            total_drop_time = time.perf_counter() - start
+            total_create_time += time.perf_counter() - start
+            total_create_mem += (server.memory_info().rss / 1024 - init_mem)
+            init_mem = server.memory_info().rss / 1024
 
             start = time.perf_counter()
             conn.commit()
             total_commit_time += time.perf_counter() - start
+            total_commit_mem += (server.memory_info().rss / 1024 - init_mem)
+            init_mem = server.memory_info().rss / 1024
+
+            start = time.perf_counter()
+            cur.execute("drop table test")
+            total_drop_time += time.perf_counter() - start
+            total_drop_mem += (server.memory_info().rss / 1024 - init_mem)
+            init_mem = server.memory_info().rss / 1024
+
+            start = time.perf_counter()
+            conn.commit()
+            total_commit_time += time.perf_counter() - start
+            total_commit_mem += (server.memory_info().rss / 1024 - init_mem)
+            init_mem = server.memory_info().rss / 1024
 
         if server:
             print(f'After {((i + 1) * 1000)} queries:')
@@ -124,9 +137,9 @@ try:
         else:
             print(f'Table CREATE & DROP cycle [{i}]')
 
-        print(f'Average [CREATE] time: {total_create_time / 1000:.6f}s')
-        print(f'Average [DROP] time:   {total_drop_time / 1000:.6f}s')
-        print(f'Avarage [COMMIT] time: {(total_commit_time / 2) / 1000:.6f}s')
+        print(f'Average [CREATE] time: {total_create_time / 1000:.6f} s, Average mem increase: {total_create_mem / 1000:.6f} kB')
+        print(f'Average [DROP] time:   {total_drop_time / 1000:.6f} s, Average mem increase: {total_drop_mem / 1000:.6f} kB')
+        print(f'Avarage [COMMIT] time: {(total_commit_time / 2) / 1000:.6f} s, Average mem increase: {(total_commit_mem / 2) / 1000:.6f} kB')
         print('-' * 25)
 
 except KeyboardInterrupt as _:
