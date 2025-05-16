@@ -31,13 +31,16 @@
 				// Roman Simakov: We need to return deleted relations to skip them.
 				// This maybe result of cleanup failure after phase 3.
 
-				// [MEMLEAK] Was: while ( (relation = MET_lookup_relation_id(tdbb, rel_id++, true)) )
-				// That means, we return DELETED relations, instead rewriting them. That's why, if we reach
-				// 32000+ operations, we got error.
-				// Changing return_delete stmt to false fix this, but not full.
-				while ( (relation = MET_lookup_relation_id(tdbb, rel_id, false)) )
+				while ( (relation = MET_lookup_relation_id(tdbb, rel_id, true)) )
 				{
-					// [MEMLEAK] Changing way of rel_id increment
+/*
+[PRACTICE] We care about REL_deleted records. If a record is used in only one or fewer transactions, we choose the current rel_id.
+I also changed the mechanism for incrementing rel_id. Now we increment rel_id only if we can't use that record.
+*/
+					if (relation->rel_flags & REL_deleted && relation->rel_use_count <= 1) {
+						break;
+					}
+
 					rel_id++;
 					if (rel_id < local_min_relation_id || rel_id > MAX_RELATION_ID)
 						rel_id = local_min_relation_id;
@@ -53,7 +56,6 @@
 				X.RDB$RELATION_ID = (rel_id > MAX_RELATION_ID) ? local_min_relation_id : rel_id;
 
 				MODIFY Y USING
-				// [MEMLEAK] Was: Y.RDB$RELATION_ID = --rel_id;
 					Y.RDB$RELATION_ID = rel_id;
 					if (blob_id.isEmpty())
 						Y.RDB$DBKEY_LENGTH = 8;
