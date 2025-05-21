@@ -85,8 +85,21 @@ I also changed the mechanism for incrementing rel_id. Now we increment rel_id on
 		END_FOR
 ```
 
+Главный вопрос в том, можно ли просто так перезаписывать помеченные на удаление записи? Сами записи связанный с `tra_resources` 
+и добавляются туда из `TRA_post_resources`. Очистка происходит в `TRA_release_transaction` (`MET_release_existence`). </br>
+Если смотреть на `tra_resources` в момент "перезаписи", можно подметить то, что в них не содержатся данные об отношении.
+Проверить это можно следующим образом:
+```
+for (rsc = transaction->tra_resources.begin(); rsc < transaction->tra_resources.end(); rsc++) {
+    if (rsc->rsc_rel == relation) break;
+}
+```
+Иными словами, теперь мы перезаписываем только если это отношение есть в нынешней транзакции и нигде более, 
+то есть мы гарантируем что мы явно знаем где сейчас это отношение. Но по результатам тестирования, такой случай ни разу
+не был встречен.
+ 
 
-## MSC_alloc & MSC_free version (Old)
+## MSC_alloc & MSC_free version (Old target)
 ------------------------------
 
 Result 08.05: No, there is no memaleak. This is a cache leak. </br>
