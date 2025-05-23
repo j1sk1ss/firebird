@@ -1,4 +1,27 @@
 # Server does not release memory after DDL statements. #7318 (Opened)
+
+## core_6414_test failed (Current)
+23.05
+```
+tests.bugs.core_1245_test.test_1 - Regression
+tests.bugs.core_3141_test.test_1 - Regression
+tests.bugs.core_3362_basic_test.test_1 - Regression
+tests.bugs.core_6336_test.test_1 - Regression
+tests.bugs.core_6414_test.test_1 - Regression
+tests.bugs.gh_7062_test.test_1 - Regression
+tests.bugs.gh_8168_test.test_1 - Regression
+tests.functional.domain.create.test_26.test_1 - Regression
+tests.functional.domain.create.test_27.test_1 - Regression
+tests.functional.domain.create.test_28.test_1 - Regression
+tests.functional.domain.create.test_29.test_1 - Regression
+tests.functional.domain.create.test_31.test_1 - Regression
+tests.functional.replication.test_oltp_emul_ddl.test_1 - Regression
+```
+
+Возможно после изменения исходного кода, перестали проходить вышеописанные тесты. Для проверки будет проведён откат
+до версии из `main` и прогнан скрипт `failed_tests.py`. Так же будет проведён тест изменённой версии.
+
+
 ## Cache leak version (Current)
 ------------------------------
 
