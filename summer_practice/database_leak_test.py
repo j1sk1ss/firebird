@@ -3,11 +3,10 @@ import sys
 import fdb
 import psutil
 import argparse
-import time
+
 
 PROC_NAME = 'firebird'
 DB__NAME = '/tmp/test_mem.fdb'
-
 
 parser = argparse.ArgumentParser(description='Check memory consumption during CREATE/DROP database')
 parser.add_argument("-u", "--user", default='sysdba')
