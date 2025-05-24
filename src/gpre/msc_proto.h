@@ -35,7 +35,6 @@ void		MSC_copy(const char*, int, char*);
 void		MSC_copy_cat(const char*, int, const char*, int, char*);
 gpre_sym*	MSC_find_symbol(gpre_sym*, sym_t);
 void		MSC_free(void*);
-void 		MSC_free_all();
 void		MSC_free_request(gpre_req*);
 void		MSC_init();
 bool		MSC_match(const kwwords_t);

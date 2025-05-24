@@ -3660,6 +3660,11 @@ static bool create_relation(thread_db* tdbb, SSHORT phase, DeferredWork* work, j
 
 			MODIFY X USING
 				rel_id = X.RDB$RELATION_ID;
+				// FILE* fp = fopen("/tmp/create_relation_init_id.log", "a");
+				// if (fp) {
+				// 	fprintf(fp, "Init id is: %d\n", X.RDB$RELATION_ID);
+				// 	fclose(fp);
+				// }
 
 				if (rel_id < local_min_relation_id || rel_id > MAX_RELATION_ID)
 					rel_id = X.RDB$RELATION_ID = local_min_relation_id;
@@ -3674,6 +3679,8 @@ static bool create_relation(thread_db* tdbb, SSHORT phase, DeferredWork* work, j
 [PRACTICE_MEMLEAK 11.05]
 We should return to true, because otherwise, we don't clear another relation-related cache like depends and other stuff.
 Insted rewriting, we should use delete_relation function.
+[PRACTICE_MEMLEAK 24.05]
+We gettitng failed test if we rewrite this pointers. Maybe we rewrite already used one?
 */
 
 				while ( (relation = MET_lookup_relation_id(tdbb, rel_id, true)) )
@@ -3685,9 +3692,9 @@ Insted rewriting, we should use delete_relation function.
 					[PRACTICE_MEMLEAK 14.05]
 					Update: If relation REL_deleted resources already freed.
 					*/
-					if (relation->rel_flags & REL_deleted && relation->rel_use_count <= 1) {
-						break;
-					}
+					// if ((relation->rel_flags & REL_deleted) && !(relation->rel_flags & REL_deleting) && !relation->rel_use_count) {
+					// 	break;
+					// }
 
 					rel_id++;
 					if (rel_id < local_min_relation_id || rel_id > MAX_RELATION_ID)
@@ -3710,15 +3717,19 @@ TABLE TEST\n- Implementation limit exceeded', -607, 335544351)
 
 					/*
 					[PRACTICE_MEMLEAK 11.05]
+					[PRACTICE_MEMLEAK 24.05]
 					if (relation->rel_flags & REL_deleted) {
-						DFW_post_work(transaction, dfw_delete_relation, "(null)", rel_id);
-						delete_relation(tdbb, 0, NULL, transaction);
+						DFW_post_work(transaction, dfw_delete_relation, work->dfw_name.c_str(), rel_id);
 					}
 					*/
 				}
 
 				X.RDB$RELATION_ID = (rel_id > MAX_RELATION_ID) ? local_min_relation_id : rel_id;
-
+				// FILE* fps = fopen("/tmp/create_relation_init_id.log", "a");
+				// if (fps) {
+				// 	fprintf(fps, "After id is: %d\n", X.RDB$RELATION_ID);
+				// 	fclose(fps);
+				// }
 				MODIFY Y USING
 					Y.RDB$RELATION_ID = rel_id;
 					if (blob_id.isEmpty())
@@ -5027,7 +5038,15 @@ static bool delete_relation(thread_db* tdbb, SSHORT phase, DeferredWork* work, j
 		// get rid of the relation itself
 
 		request.reset();
-
+		/*
+		[PRACTICE MEMLEAK 24.05]
+		No we know, that whole 1000 relations are freed by this function.
+		*/
+		// FILE* fps = fopen("/tmp/delete_relation.log", "a");
+		// if (fps) {
+		// 	fprintf(fps, "Deleting ID: %d\n", relation->rel_id);
+		// 	fclose(fps);
+		// }
 		FOR(REQUEST_HANDLE request) X IN RDB$FORMATS WITH
 			X.RDB$RELATION_ID EQ relation->rel_id
 		{

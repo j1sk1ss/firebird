@@ -1,27 +1,5 @@
 # Server does not release memory after DDL statements. #7318 (Opened)
 
-## core_6414_test failed (Current)
-23.05
-```
-tests.bugs.core_1245_test.test_1 - Regression
-tests.bugs.core_3141_test.test_1 - Regression
-tests.bugs.core_3362_basic_test.test_1 - Regression
-tests.bugs.core_6336_test.test_1 - Regression
-tests.bugs.core_6414_test.test_1 - Regression
-tests.bugs.gh_7062_test.test_1 - Regression
-tests.bugs.gh_8168_test.test_1 - Regression
-tests.functional.domain.create.test_26.test_1 - Regression
-tests.functional.domain.create.test_27.test_1 - Regression
-tests.functional.domain.create.test_28.test_1 - Regression
-tests.functional.domain.create.test_29.test_1 - Regression
-tests.functional.domain.create.test_31.test_1 - Regression
-tests.functional.replication.test_oltp_emul_ddl.test_1 - Regression
-```
-
-Возможно после изменения исходного кода, перестали проходить вышеописанные тесты. Для проверки будет проведён откат
-до версии из `main` и прогнан скрипт `failed_tests.py`. Так же будет проведён тест изменённой версии.
-
-
 ## Cache leak version (Current)
 ------------------------------
 
@@ -121,6 +99,63 @@ for (rsc = transaction->tra_resources.begin(); rsc < transaction->tra_resources.
 то есть мы гарантируем что мы явно знаем где сейчас это отношение. Но по результатам тестирования, такой случай ни разу
 не был встречен.
  
+
+### core_6414_test failed (Current)
+------------------------------
+
+Start at 23.05
+```
+tests.bugs.core_1245_test.test_1 						- Regression
+tests.bugs.core_3141_test.test_1 						- Regression
+tests.bugs.core_3362_basic_test.test_1 					- Regression
+tests.bugs.core_6336_test.test_1 						- Regression
+tests.bugs.core_6414_test.test_1 						- Regression
+tests.bugs.gh_7062_test.test_1 							- Regression
+tests.bugs.gh_8168_test.test_1 							- Regression
+tests.functional.domain.create.test_26.test_1 			- Regression
+tests.functional.domain.create.test_27.test_1 			- Regression
+tests.functional.domain.create.test_28.test_1 			- Regression
+tests.functional.domain.create.test_29.test_1 			- Regression
+tests.functional.domain.create.test_31.test_1 			- Regression
+tests.functional.replication.test_oltp_emul_ddl.test_1 	- Regression
+```
+
+После изменения исходного кода, перестали проходить вышеописанные тесты. Для проверки будет проведён откат
+до версии из `main` и прогнан скрипт `failed_tests.py`. Так же будет проведён тест изменённой версии. </br>
+Есть идея, что проблема в не полной очистке отношений. (Всё таки оно оставляет мусор, как я понимаю).  
+Под подозрением именно [MET_relation](https://github.com/j1sk1ss/firebird/blob/master/src/jrd/met.epp#L3676-L3735) и 
+[METD_get_relation](https://github.com/j1sk1ss/firebird/blob/master/src/dsql/metd.epp#L1206-L1405). </br>
+Сама ошибка происходит из-за неинициализированного указателя в `ddl.cpp`:
+
+```
+assign_field_length(field, resolved_type->intlsym_bytes_per_char);
+resolved_type == NULL // true
+```
+Проблема в перезаписи отношений. Точка очистки отношений есть, и она в `releaseRelations` функции. </br>
+На тысячу операций удаление и создание было вызванно 8 очисток всех отношений. С учётом того, что удаления и создания
+происходят в разных транзакциях, это может быть проблемой. Но с другой стороны, при этом очищается весь вектор отношений.
+
+```
+❯ sudo python3 summer_practice/table_leak_test.py -a ss -c 1
+After 1000 queries:
+Used:        50744.0 kB
+Difference:  4224.0 kB
+-------------------------
+Average [CREATE] time: 0.000912 s, Average mem increase: 0.128000 kB
+Average [DROP] time:   0.001138 s, Average mem increase: 2.688000 kB
+Avarage [COMMIT] time: 0.000836 s, Average mem increase: 0.704000 kB
+-------------------------
+❯ cat /tmp/release_log.log
+reletaions freed!
+reletaions freed!
+reletaions freed!
+reletaions freed!
+reletaions freed!
+reletaions freed!
+reletaions freed!
+reletaions freed!
+```
+
 
 ## MSC_alloc & MSC_free version (Old target)
 ------------------------------

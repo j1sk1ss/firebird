@@ -927,10 +927,18 @@ void Jrd::Attachment::detachLocks()
 	att_long_locks = NULL;
 }
 
+/*
+[PRACTIVE MEMLEAK 24.05]
+Here we release relations.
+*/
 void Jrd::Attachment::releaseRelations(thread_db* tdbb)
 {
 	if (att_relations)
 	{
+		/*
+		[PRACTIVE MEMLEAK 24.05]
+		Logging says us, thta this function call 8 times per one test case iteration.
+		*/
 		vec<jrd_rel*>* vector = att_relations;
 
 		for (vec<jrd_rel*>::iterator ptr = vector->begin(), end = vector->end(); ptr < end; ++ptr)
@@ -945,6 +953,12 @@ void Jrd::Attachment::releaseRelations(thread_db* tdbb)
 				delete relation;
 			}
 		}
+
+/*
+[PRACTIVE MEMLEAK 24.05]
+Vector clear operation
+*/
+		vector->clear();
 	}
 }
 

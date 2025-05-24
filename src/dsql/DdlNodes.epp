@@ -7631,6 +7631,10 @@ void AlterRelationNode::checkPermission(thread_db* tdbb, jrd_tra* transaction)
 	SCL_check_relation(tdbb, &dscName, SCL_alter);
 }
 
+/*
+[PRACTICE MEMLEAK 23.05]
+ALTER TABLE call stack
+*/
 void AlterRelationNode::execute(thread_db* tdbb, DsqlCompilerScratch* dsqlScratch,
 	jrd_tra* transaction)
 {
@@ -8053,6 +8057,10 @@ void AlterRelationNode::execute(thread_db* tdbb, DsqlCompilerScratch* dsqlScratc
 	}
 }
 
+/*
+[PRACTICE MEMLEAK 23.05]
+ALTER TABLE
+*/
 // Modify a field, as part of an alter table statement.
 //
 // If there are dependencies on the field, abort the operation

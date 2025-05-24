@@ -24,7 +24,7 @@ parser.add_argument("-c", "--count", default=10000)
 
 args = parser.parse_args()
 test_arch: str = args.arch
-test_count: int = args.count
+test_count: int = int(args.count)
 test_user: str = args.user
 test_user_pass: str = args.upass
 

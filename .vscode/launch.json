@@ -5,7 +5,7 @@
 			"name": "isql - launch",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceRoot}/gen/Debug/firebird/bin/isql",
+			"program": "/usr/local/firebird/bin/isql",
 			"args": [],
 			"stopAtEntry": false,
 			"cwd": "${workspaceRoot}",
@@ -25,8 +25,8 @@
 			"name": "isql - attach",
 			"type": "cppdbg",
 			"request": "attach",
-			"program": "${workspaceRoot}/gen/Debug/firebird/bin/isql",
-			"processId": "${command.pickProcess}",
+			"program": "/usr/local/firebird/bin/isql",
+			"processId": "${command:pickProcess}",
 			"linux": {
 				"MIMode": "gdb"
 			},
