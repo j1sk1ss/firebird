@@ -812,7 +812,7 @@ public:
 		return isSharedNode() ? nullptr : &dsqlDesc;
 	}
 
-	// Must be overriden returning true in shared nodes.
+	// Must be overridden returning true in shared nodes.
 	virtual bool isSharedNode()
 	{
 		return false;
@@ -1516,7 +1516,7 @@ public:
 		thread_db* savedTdbb;
 		MemoryPool* oldPool;		// Save the old pool to restore on exit.
 		Request* oldRequest;		// Save the old request to restore on exit.
-		jrd_tra* oldTransaction;	// Save the old transcation to restore on exit.
+		jrd_tra* oldTransaction;	// Save the old transaction to restore on exit.
 		const StmtNode* topNode = nullptr;
 		const StmtNode* prevNode = nullptr;
 		WhichTrigger whichEraseTrig = ALL_TRIGS;
