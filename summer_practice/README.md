@@ -97,10 +97,25 @@ for (rsc = transaction->tra_resources.begin(); rsc < transaction->tra_resources.
 ```
 Иными словами, теперь мы перезаписываем только если это отношение есть в нынешней транзакции и нигде более, 
 то есть мы гарантируем что мы явно знаем где сейчас это отношение. Но по результатам тестирования, такой случай ни разу
-не был встречен.
+не был встречен. </br>
  
+`DFW_perform_post_commit_work` [dfw.epp](https://github.com/j1sk1ss/firebird/blob/master/src/jrd/dfw.epp#L1649-L1715) - точка 
+где по результату тестов мы можем интегрировать очистку кеша. Так следующий блок был добавлен в эту функцию:
+```
+Jrd::Attachment* attachment = transaction->getAttachment();
+vec<jrd_rel*>& rels = *attachment->att_relations;
+for (FB_SIZE_T i = 0; i < rels.count(); i++) {
+	jrd_rel* relation = rels[i];
+	if (relation && (relation->rel_flags & REL_deleted) && relation->rel_use_count <= 0) {
+		relation->cleanUp();
+		delete rels[i];
+		rels[i] = NULL;
+	}
+}
+```
 
-### core_6414_test failed (Current)
+
+### core_6414_test failed (Solved)
 ------------------------------
 
 Start at 23.05
