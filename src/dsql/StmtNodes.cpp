@@ -6464,6 +6464,7 @@ void LocalDeclarationsNode::genBlr(DsqlCompilerScratch* dsqlScratch)
 			nodeIs<DeclareSubProcNode>(parameter) ||
 			nodeIs<DeclareSubFuncNode>(parameter))
 		{
+			dsqlScratch->putDebugSrcInfo(parameter->line, parameter->column);
 			parameter->dsqlPass(dsqlScratch);
 			parameter->genBlr(dsqlScratch);
 		}
