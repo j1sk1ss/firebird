@@ -999,6 +999,7 @@ void NBackup::attach_database()
 	}
 
 	ClumpletWriter dpb(ClumpletReader::dpbList, MAX_DPB_SIZE);
+	uSvc->fillDpb(dpb);
 
 	const unsigned char* authBlock;
 	unsigned int authBlockSize = uSvc->getAuthBlock(&authBlock);
